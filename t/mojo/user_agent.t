@@ -490,12 +490,15 @@ is $tx->res->code, 200,   'right status';
 is $tx->res->body, 'Hi!', 'right content';
 
 # Destructor doesn't clobber $@
-sub deadly {
-  my $e = Mojo::UserAgent->new;
-  $e->get('/');
-  die 'original-exception';
+sub api_call_may_throw_exception {
+    my $e = Mojo::UserAgent->new;
+    $e->get('/');
+    die 'original-exception';
 }
-eval { deadly() };
-like $@, qr/^original-exception/, 'got correct exception';
+
+my $apierror = 'non-empty-value';
+eval { api_call_may_throw_exception(); 1 } or $apierror = $@;
+isnt $apierror, 'non-empty-value', 'Exception was triggered.';
+like $apierror, qr/^original-exception/, 'got correct exception';
 
 done_testing();
